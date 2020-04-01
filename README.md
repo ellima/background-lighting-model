@@ -23,7 +23,7 @@ This project was tested with an ESP8266 so far, but should run on the most commo
 
 Open a new sketch in the ArduinoIDE and paste the following snippet. **Make sure to set the definitions according to your setup!**
 
-```c++
+```C++
 #include <BackgroundLight.h>
 
 #define LED_PIN 0 // sets the output pin for the data to the strip. See the pinout for your microcontroller

@@ -7,7 +7,7 @@ getSunrise	KEYWORD2
 getSunset	KEYWORD2
 background_sky	KEYWORD2
 
-# Constants
+# Keywords Constants
 LED_PIN	LITERAL1
 LED_COUNT	LITERAL1
 MINUTES	LITERAL1
