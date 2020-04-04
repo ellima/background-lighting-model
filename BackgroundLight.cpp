@@ -12,6 +12,17 @@ float Background::intensity_factor(int i){
     }
 }
 
+float Background::intensity_factor(int i, time_t time){
+    float sun_offset = ( (float)(sunset - sunrise) / (float)(next_index - background_index) ) * (SPREADWIDTH + 2);
+    if (time >= sunrise - sun_offset && time <= sunset + sun_offset){
+        float peak = fmap(time, sunrise - sun_offset, sunset + sun_offset, background_index - (SPREADWIDTH + 2), next_index + (SPREADWIDTH + 1));
+        return gauss(i, peak);
+    }
+    else {
+        return 0;
+    }
+}
+
 uint32_t Background::eclipse(int index, uint8_t red, uint8_t green, uint8_t blue){
 
     uint8_t target_red = morning_red.red;
@@ -35,6 +46,21 @@ uint32_t Background::eclipse(int index, uint8_t red, uint8_t green, uint8_t blue
     return strip->Color(new_red, new_green, new_blue);
 }
 
+uint8_t Background::eclipse(int index, uint8_t colour, uint8_t morning, uint8_t noon, time_t time){
+
+    uint8_t target_col = morning;
+
+    float sun_height = sin(periodic * (time - init_phase));
+
+    if (sun_height >= 0){
+        target_col = fmap(sun_height, 0, 1, morning, noon);
+    }
+
+    float intensity = intensity_factor(index, time);
+
+    return (uint8_t)fmap(intensity, 0, 1, colour, target_col);
+}
+
 void Background::time_management(){
     if (current_time > sunset + ( ( (2 * periodic_time) - (sunset - sunrise) ) / 2)){
         sunrise = sunset + periodic_time;
@@ -48,77 +74,77 @@ void Background::background_sky(){
     float sun_height = sin(periodic * (current_time - init_phase));
     float sun_height_next = sin(periodic * (current_time + 1 - init_phase));
 
-    uint8_t target_red = fmap(sun_height, -1, 1, midnight_blue.red, sky_blue.red);;
-    uint8_t target_green = fmap(sun_height, -1, 1, midnight_blue.green, sky_blue.green);
-    uint8_t target_blue = fmap(sun_height, -1, 1, midnight_blue.blue, sky_blue.blue);
-
-    uint8_t target_red_next = fmap(sun_height_next, -1, 1, midnight_blue.red, sky_blue.red);
-    uint8_t target_green_next = fmap(sun_height_next, -1, 1, midnight_blue.green, sky_blue.green);
-    uint8_t target_blue_next = fmap(sun_height_next, -1, 1, midnight_blue.blue, sky_blue.blue);
-
-    int diff_red = target_red_next - target_red >=0 ? target_red_next - target_red : target_red - target_red_next;
-    int diff_green = target_green_next - target_green >= 0 ? target_green_next - target_green : target_green - target_green_next;
-    int diff_blue = target_blue_next - target_blue >= 0 ? target_blue_next - target_blue : target_blue - target_blue_next;
-
-    diff_red = diff_red == 0 ? 1000 : diff_red;
-    diff_green = diff_green == 0 ? 1000 : diff_green;
-    diff_blue = diff_blue == 0 ? 1000 : diff_blue;
-
     t_ref = millis();
 
-    if (current_time == ref_time && true){
-        temp_red = red_state;
-        temp_green = green_state;
-        temp_blue = blue_state;
-
-        if ((int)(t_ref - t_ref_red) > (1000 / diff_red)){
-            if((int)target_red_next - (int)temp_red < -1){
-                temp_red += -1;
-            }
-            if((int)target_red_next - (int)temp_red > 1){
-                temp_red += 1;
-            }
-            t_ref_red += (1000 / diff_red);
-        }
-
-        if ((int)(t_ref - t_ref_green) > (1000 / diff_green)){
-            if((int)target_green_next - (int)temp_green < -1){
-                temp_green += -1;
-            }
-            if((int)target_green_next - (int)temp_green > 1){
-                temp_green += 1;
-            }
-            t_ref_green += (1000 / diff_green);
-        }
-
-        if ((int)(t_ref - t_ref_blue) > (1000 / diff_blue)){
-            if((int)target_blue_next - (int)temp_blue < -1){
-                temp_blue += -1;
-            }
-            if((int)target_blue_next - (int)temp_blue > 1){
-                temp_blue += 1;
-            }
-            t_ref_blue += (1000 / diff_blue);
-        }
-    }
-    else {
-        temp_red = target_red;
-        temp_green = target_green;
-        temp_blue = target_blue;
-
-        t_ref_red = t_ref;
-        t_ref_green = t_ref;
-        t_ref_blue = t_ref;
-
-        ref_time = current_time;
-    }
-
-    red_state = temp_red;
-    green_state = temp_green;
-    blue_state = temp_blue;
-
     for (int i=background_index; i < next_index; i++){
-        uint32_t to_display = eclipse(i, red_state, green_state, blue_state);
+        uint8_t target_red = fmap(sun_height, -1, 1, midnight_blue.red, sky_blue.red);
+        uint8_t target_green = fmap(sun_height, -1, 1, midnight_blue.green, sky_blue.green);
+        uint8_t target_blue = fmap(sun_height, -1, 1, midnight_blue.blue, sky_blue.blue);
+
+        uint8_t target_red_next = fmap(sun_height_next, -1, 1, midnight_blue.red, sky_blue.red);
+        uint8_t target_green_next = fmap(sun_height_next, -1, 1, midnight_blue.green, sky_blue.green);
+        uint8_t target_blue_next = fmap(sun_height_next, -1, 1, midnight_blue.blue, sky_blue.blue);
+
+        target_red = eclipse(i, target_red, morning_red.red, noon.red, current_time);
+        target_green = eclipse(i, target_green, morning_red.green, noon.green, current_time);
+        target_blue = eclipse(i, target_blue, morning_red.blue, noon.blue, current_time);
+
+        target_red_next = eclipse(i, target_red_next, morning_red.red, noon.red, current_time + 1);
+        target_green_next = eclipse(i, target_green_next, morning_red.green, noon.green, current_time + 1);
+        target_blue_next = eclipse(i, target_blue_next, morning_red.blue, noon.blue, current_time + 1);
+
+        int diff_red = target_red_next - target_red >=0 ? target_red_next - target_red : target_red - target_red_next;
+        int diff_green = target_green_next - target_green >= 0 ? target_green_next - target_green : target_green - target_green_next;
+        int diff_blue = target_blue_next - target_blue >= 0 ? target_blue_next - target_blue : target_blue - target_blue_next;
+
+        diff_red = diff_red == 0 ? 1001 : diff_red;
+        diff_green = diff_green == 0 ? 1001 : diff_green;
+        diff_blue = diff_blue == 0 ? 1001 : diff_blue;
+
+        if (current_time == ref_time && true){
+            if ((int)(t_ref - t_ref_red[i-background_index]) > (1000 / diff_red)){
+                if((int)target_red_next - (int)red_state[i-background_index] < -1){
+                    red_state[i-background_index] += -1;
+                }
+                if((int)target_red_next - (int)red_state[i-background_index] > 1){
+                    red_state[i-background_index] += 1;
+                }
+                t_ref_red[i-background_index] += (1000 / diff_red);
+            }
+
+            if ((int)(t_ref - t_ref_green[i-background_index]) > (1000 / diff_green)){
+                if((int)target_green_next - (int)green_state[i-background_index] < -1){
+                    green_state[i-background_index] += -1;
+                }
+                if((int)target_green_next - (int)green_state[i-background_index] > 1){
+                    green_state[i-background_index] += 1;
+                }
+                t_ref_green[i-background_index] += (1000 / diff_green);
+            }
+
+            if ((int)(t_ref - t_ref_blue[i-background_index]) > (1000 / diff_blue)){
+                if((int)target_blue_next - (int)blue_state[i-background_index] < -1){
+                    blue_state[i-background_index] += -1;
+                }
+                if((int)target_blue_next - (int)blue_state[i-background_index] > 1){
+                    blue_state[i-background_index] += 1;
+                }
+                t_ref_blue[i-background_index] += (1000 / diff_blue);
+            }
+        }
+        else {
+            red_state[i-background_index] = target_red;
+            green_state[i-background_index] = target_green;
+            blue_state[i-background_index] = target_blue;
+
+            t_ref_red[i-background_index] = t_ref;
+            t_ref_green[i-background_index] = t_ref;
+            t_ref_blue[i-background_index] = t_ref;
+
+            ref_time = current_time;
+        }
+
+        uint32_t to_display = strip->Color(red_state[i-background_index], green_state[i-background_index], blue_state[i-background_index]);
         strip->setPixelColor(i, strip->gamma32(to_display));
     }
 
@@ -127,7 +153,7 @@ void Background::background_sky(){
 }
 
 Background::Background(uint16_t pin, uint16_t to, int minutes, uint16_t from, uint8_t brightness)
-: background_index(from), next_index(to)
+: background_index(from), next_index(to), new_used(true)
 {
     time(&current_time);
 
@@ -144,12 +170,35 @@ Background::Background(uint16_t pin, uint16_t to, int minutes, uint16_t from, ui
     strip->setBrightness(brightness);
     strip->show();
 
-    new_used = true;
+    float sun_height = sin(periodic * (current_time - init_phase));
+    uint8_t temp = 0;
+
+    red_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.red, sky_blue.red);
+    for (int i=0; i < (next_index - background_index); i++){
+        red_state[i] = eclipse(i, temp, morning_red.red, noon.red, current_time);
+    }
+
+    green_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.green, sky_blue.green);
+    for (int i=0; i < (next_index - background_index); i++){
+        green_state[i] = eclipse(i, temp, morning_red.green, noon.green, current_time);
+    }
+
+    blue_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.blue, sky_blue.blue);
+    for (int i=0; i < (next_index - background_index); i++){
+        blue_state[i] = eclipse(i, temp, morning_red.blue, noon.blue, current_time);
+    }
+
+    t_ref_red = new unsigned long[next_index - background_index] {0};
+    t_ref_green = new unsigned long[next_index - background_index] {0};
+    t_ref_blue = new unsigned long[next_index - background_index] {0};
 }
 
 
 Background::Background(uint16_t pin, time_t rise, time_t set, uint16_t to, uint16_t from, uint8_t brightness)
-: background_index(from), next_index(to)
+: background_index(from), next_index(to), new_used(true)
 {
     time(&current_time);
     sunrise = rise;
@@ -164,11 +213,34 @@ Background::Background(uint16_t pin, time_t rise, time_t set, uint16_t to, uint1
     strip->setBrightness(brightness);
     strip->show();
 
-    new_used = true;
+    float sun_height = sin(periodic * (current_time - init_phase));
+    uint8_t temp = 0;
+
+    red_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.red, sky_blue.red);
+    for (int i=0; i < (next_index - background_index); i++){
+        red_state[i] = eclipse(i, temp, morning_red.red, noon.red, current_time);
+    }
+
+    green_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.green, sky_blue.green);
+    for (int i=0; i < (next_index - background_index); i++){
+        green_state[i] = eclipse(i, temp, morning_red.green, noon.green, current_time);
+    }
+
+    blue_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.blue, sky_blue.blue);
+    for (int i=0; i < (next_index - background_index); i++){
+        blue_state[i] = eclipse(i, temp, morning_red.blue, noon.blue, current_time);
+    }
+
+    t_ref_red = new unsigned long[next_index - background_index] {0};
+    t_ref_green = new unsigned long[next_index - background_index] {0};
+    t_ref_blue = new unsigned long[next_index - background_index] {0};
 }
 
-Background::Background(Adafruit_NeoPixel &neo, int minutes, uint16_t start_index, uint16_t to)
-: background_index(start_index), next_index(to == 0 ? neo.numPixels() : to)
+Background::Background(Adafruit_NeoPixel &neo, int minutes, uint16_t from, uint16_t to)
+: background_index(from), next_index(to <= 0 || to <= from ? neo.numPixels() : to), new_used(false)
 {
     time(&current_time);
 
@@ -182,11 +254,34 @@ Background::Background(Adafruit_NeoPixel &neo, int minutes, uint16_t start_index
 
     strip = &neo;
 
-    new_used = false;
+    float sun_height = sin(periodic * (current_time - init_phase));
+    uint8_t temp = 0;
+
+    red_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.red, sky_blue.red);
+    for (int i=0; i < (next_index - background_index); i++){
+        red_state[i] = eclipse(i, temp, morning_red.red, noon.red, current_time);
+    }
+
+    green_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.green, sky_blue.green);
+    for (int i=0; i < (next_index - background_index); i++){
+        green_state[i] = eclipse(i, temp, morning_red.green, noon.green, current_time);
+    }
+
+    blue_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.blue, sky_blue.blue);
+    for (int i=0; i < (next_index - background_index); i++){
+        blue_state[i] = eclipse(i, temp, morning_red.blue, noon.blue, current_time);
+    }
+
+    t_ref_red = new unsigned long[next_index - background_index] {0};
+    t_ref_green = new unsigned long[next_index - background_index] {0};
+    t_ref_blue = new unsigned long[next_index - background_index] {0};
 }
 
-Background::Background(Adafruit_NeoPixel &neo, time_t rise, time_t set, uint16_t start_index, uint16_t to)
-: background_index(start_index), next_index(to == 0 ? neo.numPixels() : to)
+Background::Background(Adafruit_NeoPixel &neo, time_t rise, time_t set, uint16_t from, uint16_t to)
+: background_index(from), next_index(to == 0 ? neo.numPixels() : to), new_used(false)
 {
     time(&current_time);
     sunrise = rise;
@@ -198,11 +293,42 @@ Background::Background(Adafruit_NeoPixel &neo, time_t rise, time_t set, uint16_t
 
     strip = &neo;
 
-    new_used = false;
+    float sun_height = sin(periodic * (current_time - init_phase));
+    uint8_t temp = 0;
+
+    red_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.red, sky_blue.red);
+    for (int i=0; i < (next_index - background_index); i++){
+        red_state[i] = eclipse(i, temp, morning_red.red, noon.red, current_time);
+    }
+
+    green_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.green, sky_blue.green);
+    for (int i=0; i < (next_index - background_index); i++){
+        green_state[i] = eclipse(i, temp, morning_red.green, noon.green, current_time);
+    }
+
+    blue_state = new uint8_t[next_index - background_index];
+    temp = fmap(sun_height, -1, 1, midnight_blue.blue, sky_blue.blue);
+    for (int i=0; i < (next_index - background_index); i++){
+        blue_state[i] = eclipse(i, temp, morning_red.blue, noon.blue, current_time);
+    }
+
+    t_ref_red = new unsigned long[next_index - background_index] {0};
+    t_ref_green = new unsigned long[next_index - background_index] {0};
+    t_ref_blue = new unsigned long[next_index - background_index] {0};
 }
 
 Background::~Background(){
     if (new_used){
         delete strip;
     }
+
+    delete[] red_state;
+    delete[] green_state;
+    delete[] blue_state;
+
+    delete[] t_ref_red;
+    delete[] t_ref_green;
+    delete[] t_ref_blue;
 }
