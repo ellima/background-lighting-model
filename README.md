@@ -6,9 +6,13 @@ It mimics the light of the sky from a bright blue around noon to dark blue aroun
 
 ## Prerequisites
 
-This project was tested with an ESP8266 so far, but should run on the most common devices which can be programmed using the [ArduinoIDE](https://www.arduino.cc/en/Main/Software).
+This project was tested with an ESP8266 so far and should also run on an ESP32. Arduino Uno doesn't work so far, but due to its little RAM capacity it is advicable to use more powerful architectures like the ESP preocessors anyway.
 
+* ESP32 or ESP8266 board
 * The ArduinoIDE. Download and install [here](https://www.arduino.cc/en/Main/Software)
+* Add your board to the ArduinoIDE
+    * [ESP32](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md)
+    * [ESP8266](https://github.com/esp8266/Arduino#installing-with-boards-manager)
 * Install [Adafruit_NeoPixel library](https://github.com/adafruit/Adafruit_NeoPixel) according to their installation instructions on their [GitHub repo](https://github.com/adafruit/Adafruit_NeoPixel). Additional information about this library can be found [here](https://learn.adafruit.com/adafruit-neopixel-uberguide/arduino-library-use).
 
 ## Installation
@@ -42,7 +46,7 @@ void loop() {
 }
 ```
 
-This is the simplest usage example. The library allows more options to work with the background function to meet additional demands for a project.
+This is the simplest usage example. The library allows for more options to work with the background function to meet additional demands for a project.
 
 Further examples are work in progress.
 
