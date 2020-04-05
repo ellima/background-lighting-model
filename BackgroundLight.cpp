@@ -2,9 +2,11 @@
 
 
 float Background::intensity_factor(int i){
-    float sun_offset = ( (float)(sunset - sunrise) / (float)(next_index - background_index) ) * (SPREADWIDTH + 2);
+    float sun_offset = (sunset - sunrise) / 2;
+
     if (current_time >= sunrise - sun_offset && current_time <= sunset + sun_offset){
-        float peak = fmap(current_time, sunrise - sun_offset, sunset + sun_offset, background_index - (SPREADWIDTH + 2), next_index + (SPREADWIDTH + 1));
+        int half_leds = (next_index - background_index) / 2;
+        float peak = fmap(current_time, sunrise - sun_offset, sunset + sun_offset, background_index - half_leds, next_index + half_leds - 1);
         return gauss(i, peak);
     }
     else {
@@ -13,9 +15,11 @@ float Background::intensity_factor(int i){
 }
 
 float Background::intensity_factor(int i, time_t time){
-    float sun_offset = ( (float)(sunset - sunrise) / (float)(next_index - background_index) ) * (SPREADWIDTH + 2);
+    float sun_offset = (sunset - sunrise) / 2;
+
     if (time >= sunrise - sun_offset && time <= sunset + sun_offset){
-        float peak = fmap(time, sunrise - sun_offset, sunset + sun_offset, background_index - (SPREADWIDTH + 2), next_index + (SPREADWIDTH + 1));
+        int half_leds = (next_index - background_index) / 2;
+        float peak = fmap(time, sunrise - sun_offset, sunset + sun_offset, background_index - half_leds, next_index + half_leds - 1);
         return gauss(i, peak);
     }
     else {
@@ -170,6 +174,8 @@ Background::Background(uint16_t pin, uint16_t to, int minutes, uint16_t from, ui
     strip->setBrightness(brightness);
     strip->show();
 
+    sigma = (to - from) / 8 < 1 ? 1 : (to - from) / 8;
+
     float sun_height = sin(periodic * (current_time - init_phase));
     uint8_t temp = 0;
 
@@ -191,9 +197,9 @@ Background::Background(uint16_t pin, uint16_t to, int minutes, uint16_t from, ui
         blue_state[i] = eclipse(i, temp, morning_red.blue, noon.blue, current_time);
     }
 
-    t_ref_red = new unsigned long[next_index - background_index] {0};
-    t_ref_green = new unsigned long[next_index - background_index] {0};
-    t_ref_blue = new unsigned long[next_index - background_index] {0};
+    t_ref_red = new unsigned long[next_index - background_index];
+    t_ref_green = new unsigned long[next_index - background_index];
+    t_ref_blue = new unsigned long[next_index - background_index];
 }
 
 
@@ -213,6 +219,8 @@ Background::Background(uint16_t pin, time_t rise, time_t set, uint16_t to, uint1
     strip->setBrightness(brightness);
     strip->show();
 
+    sigma = (to - from) / 8 < 1 ? 1 : (to - from) / 8;
+
     float sun_height = sin(periodic * (current_time - init_phase));
     uint8_t temp = 0;
 
@@ -234,9 +242,9 @@ Background::Background(uint16_t pin, time_t rise, time_t set, uint16_t to, uint1
         blue_state[i] = eclipse(i, temp, morning_red.blue, noon.blue, current_time);
     }
 
-    t_ref_red = new unsigned long[next_index - background_index] {0};
-    t_ref_green = new unsigned long[next_index - background_index] {0};
-    t_ref_blue = new unsigned long[next_index - background_index] {0};
+    t_ref_red = new unsigned long[next_index - background_index];
+    t_ref_green = new unsigned long[next_index - background_index];
+    t_ref_blue = new unsigned long[next_index - background_index];
 }
 
 Background::Background(Adafruit_NeoPixel &neo, int minutes, uint16_t from, uint16_t to)
@@ -254,6 +262,9 @@ Background::Background(Adafruit_NeoPixel &neo, int minutes, uint16_t from, uint1
 
     strip = &neo;
 
+    sigma = to <= 0 || to <= from ? neo.numPixels() : to;
+    sigma = (sigma - from) / 8 < 1 ? 1 : (sigma - from) / 8;
+
     float sun_height = sin(periodic * (current_time - init_phase));
     uint8_t temp = 0;
 
@@ -275,9 +286,9 @@ Background::Background(Adafruit_NeoPixel &neo, int minutes, uint16_t from, uint1
         blue_state[i] = eclipse(i, temp, morning_red.blue, noon.blue, current_time);
     }
 
-    t_ref_red = new unsigned long[next_index - background_index] {0};
-    t_ref_green = new unsigned long[next_index - background_index] {0};
-    t_ref_blue = new unsigned long[next_index - background_index] {0};
+    t_ref_red = new unsigned long[next_index - background_index];
+    t_ref_green = new unsigned long[next_index - background_index];
+    t_ref_blue = new unsigned long[next_index - background_index];
 }
 
 Background::Background(Adafruit_NeoPixel &neo, time_t rise, time_t set, uint16_t from, uint16_t to)
@@ -293,6 +304,9 @@ Background::Background(Adafruit_NeoPixel &neo, time_t rise, time_t set, uint16_t
 
     strip = &neo;
 
+    sigma = to <= 0 || to <= from ? neo.numPixels() : to;
+    sigma = (sigma - from) / 8 < 1 ? 1 : (sigma - from) / 8;
+
     float sun_height = sin(periodic * (current_time - init_phase));
     uint8_t temp = 0;
 
@@ -314,21 +328,21 @@ Background::Background(Adafruit_NeoPixel &neo, time_t rise, time_t set, uint16_t
         blue_state[i] = eclipse(i, temp, morning_red.blue, noon.blue, current_time);
     }
 
-    t_ref_red = new unsigned long[next_index - background_index] {0};
-    t_ref_green = new unsigned long[next_index - background_index] {0};
-    t_ref_blue = new unsigned long[next_index - background_index] {0};
+    t_ref_red = new unsigned long[next_index - background_index];
+    t_ref_green = new unsigned long[next_index - background_index];
+    t_ref_blue = new unsigned long[next_index - background_index];
 }
 
 Background::~Background(){
     if (new_used){
-        delete strip;
+        delete strip; strip = nullptr;
     }
 
-    delete[] red_state;
-    delete[] green_state;
-    delete[] blue_state;
+    delete[] red_state; red_state = nullptr;
+    delete[] green_state; green_state = nullptr;
+    delete[] blue_state; blue_state = nullptr;
 
-    delete[] t_ref_red;
-    delete[] t_ref_green;
-    delete[] t_ref_blue;
+    delete[] t_ref_red; t_ref_red = nullptr;
+    delete[] t_ref_green; t_ref_green = nullptr;
+    delete[] t_ref_blue; t_ref_blue = nullptr;
 }

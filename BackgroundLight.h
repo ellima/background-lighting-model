@@ -17,7 +17,6 @@
 #include <math.h>
 #endif
 
-#define SPREADWIDTH 2
 #define DATA_TRANSMISSION NEO_GRB + NEO_KHZ800
 
 #define DEFAULT_MINUTES 12
@@ -52,6 +51,8 @@ class Background{
 
     int init_phase = 0;
 
+    uint8_t sigma = 1;
+
     uint8_t * red_state = nullptr;
     uint8_t * green_state = nullptr;
     uint8_t * blue_state = nullptr;
@@ -69,7 +70,7 @@ class Background{
 
     inline const float gauss(int i, float m)
     {
-        return exp(-0.5 * pow( ( ((float)i - m) / SPREADWIDTH ), 2));
+        return exp(-0.5 * pow( ( ((float)i - m) / sigma ), 2));
     }
 
     inline const float fmap(float val, float in_min, float in_max, float out_min, float out_max)
@@ -89,6 +90,7 @@ class Background{
     time_t const getCurrentTime(){ return current_time; };
     time_t const getSunrise(){ return sunrise; };
     time_t const getSunset(){ return sunset; };
+    int const getPeriodicTime() { return periodic_time; };
 
     void background_sky();
 
