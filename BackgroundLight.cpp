@@ -2,11 +2,11 @@
 
 
 float Background::intensity_factor(int i){
-    float sun_offset = (sunset - sunrise) / 2;
+    int sun_offset = (sunset - sunrise) / 2;
 
     if (current_time >= sunrise - sun_offset && current_time <= sunset + sun_offset){
         int half_leds = (next_index - background_index) / 2;
-        float peak = fmap(current_time, sunrise - sun_offset, sunset + sun_offset, background_index - half_leds, next_index + half_leds - 1);
+        float peak = fmap(current_time, sunrise - sun_offset, sunset + sun_offset, (int)background_index - half_leds, (int)next_index + half_leds - 1);
         return gauss(i, peak);
     }
     else {
@@ -14,12 +14,12 @@ float Background::intensity_factor(int i){
     }
 }
 
-float Background::intensity_factor(int i, time_t time){
-    float sun_offset = (sunset - sunrise) / 2;
+float Background::intensity_factor(int i, long time){
+    int sun_offset = (sunset - sunrise) / 2;
 
     if (time >= sunrise - sun_offset && time <= sunset + sun_offset){
         int half_leds = (next_index - background_index) / 2;
-        float peak = fmap(time, sunrise - sun_offset, sunset + sun_offset, background_index - half_leds, next_index + half_leds - 1);
+        float peak = fmap(time, sunrise - sun_offset, sunset + sun_offset, (int)background_index - half_leds, (int)next_index - 1 + half_leds);
         return gauss(i, peak);
     }
     else {
@@ -50,7 +50,7 @@ uint32_t Background::eclipse(int index, uint8_t red, uint8_t green, uint8_t blue
     return strip->Color(new_red, new_green, new_blue);
 }
 
-uint8_t Background::eclipse(int index, uint8_t colour, uint8_t morning, uint8_t noon, time_t time){
+uint8_t Background::eclipse(int index, uint8_t colour, uint8_t morning, uint8_t noon, long time){
 
     uint8_t target_col = morning;
 
@@ -61,8 +61,9 @@ uint8_t Background::eclipse(int index, uint8_t colour, uint8_t morning, uint8_t 
     }
 
     float intensity = intensity_factor(index, time);
+    uint8_t new_colour = fmap(intensity, 0, 1, colour, target_col);
 
-    return (uint8_t)fmap(intensity, 0, 1, colour, target_col);
+    return new_colour;
 }
 
 void Background::time_management(){
@@ -202,8 +203,7 @@ Background::Background(uint16_t pin, uint16_t to, int minutes, uint16_t from, ui
     t_ref_blue = new unsigned long[next_index - background_index];
 }
 
-
-Background::Background(uint16_t pin, time_t rise, time_t set, uint16_t to, uint16_t from, uint8_t brightness)
+Background::Background(uint16_t pin, long rise, long set, uint16_t to, uint16_t from, uint8_t brightness)
 : background_index(from), next_index(to), new_used(true)
 {
     time(&current_time);
@@ -291,7 +291,7 @@ Background::Background(Adafruit_NeoPixel &neo, int minutes, uint16_t from, uint1
     t_ref_blue = new unsigned long[next_index - background_index];
 }
 
-Background::Background(Adafruit_NeoPixel &neo, time_t rise, time_t set, uint16_t from, uint16_t to)
+Background::Background(Adafruit_NeoPixel &neo, long rise, long set, uint16_t from, uint16_t to)
 : background_index(from), next_index(to == 0 ? neo.numPixels() : to), new_used(false)
 {
     time(&current_time);

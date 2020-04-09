@@ -1,16 +1,18 @@
-# Day- and Nightlight Background Library for WS2812b LED Strips
+# Library for daylight spectrum cycle background lighting w/ WS2812b LEDs
 
-This C++ library uses the [Adafruit_NeoPixel library](https://github.com/adafruit/Adafruit_NeoPixel) to provide an easy-to-use method for background lighting installations of WS2812b-LEDs, controlled by a microcontroller like an ESP32, ESP8266 or Arduino. A use case might be an LED strip around a model-railway or something similar that needs a day-like backround lighting.
+This C++ library uses the [Adafruit_NeoPixel library](https://github.com/adafruit/Adafruit_NeoPixel) to provide an easy-to-use method for background lighting installations of WS2812b-LEDs, controlled by a microcontroller like an ESP32, ESP8266 or Arduino. A use case might be an LED strip around a model-railway or something similar that needs a daylight spectrum cycle backround lighting.
 
-It mimics the light of the sky from a bright blue around noon to dark blue around midnight during a day cycle. The time period can be set arbitrarily. Twilight in the morning and eveining are also built in.
+It mimics the light of the sky from a bright blue around noon to dark blue around midnight during a course of a day. The time period can be set arbitrarily. Twilight in the morning and eveining are also built in.
 
 ## Prerequisites
 
-This project was tested with an ESP8266 so far and should also run on an ESP32. Arduino Uno doesn't work so far, but due to its little RAM capacity it is advicable to use more powerful architectures like the ESP preocessors anyway.
+This project was tested with an ESP8266 and the Arduino Uno board so far and should also run on an ESP32. **NOTE: The Arduino Uno only has 2kB in RAM. Each Pixel on the strip takes up ~18 Byte so be careful controlling large numbers of LEDs with the UNO.**
 
-* ESP32 or ESP8266 board
+Using an ESP board is recommended.
+
+* ESP32, ESP8266 or Arduino board
 * The ArduinoIDE. Download and install [here](https://www.arduino.cc/en/Main/Software)
-* Add your board to the ArduinoIDE
+* If you don't use an Arduino, add your board to the ArduinoIDE
     * [ESP32](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md)
     * [ESP8266](https://github.com/esp8266/Arduino#installing-with-boards-manager)
 * Install [Adafruit_NeoPixel library](https://github.com/adafruit/Adafruit_NeoPixel) according to their installation instructions on their [GitHub repo](https://github.com/adafruit/Adafruit_NeoPixel). Additional information about this library can be found [here](https://learn.adafruit.com/adafruit-neopixel-uberguide/arduino-library-use).
