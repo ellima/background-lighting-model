@@ -6,7 +6,7 @@ float Background::intensity_factor(int i){
 
     if (current_time >= sunrise - sun_offset && current_time <= sunset + sun_offset){
         int half_leds = (next_index - background_index) / 2;
-        float peak = fmap(current_time, sunrise - sun_offset, sunset + sun_offset, (int)background_index - half_leds, (int)next_index + half_leds - 1);
+        float peak = fmap(current_time, sunrise - sun_offset, sunset + sun_offset, (int)background_index - half_leds, (int)next_index - 1 + half_leds);
         return gauss(i, peak);
     }
     else {
@@ -173,7 +173,6 @@ Background::Background(uint16_t pin, uint16_t to, int minutes, uint16_t from, ui
     strip = new Adafruit_NeoPixel(to, pin, DATA_TRANSMISSION);
     strip->begin();
     strip->setBrightness(brightness);
-    strip->show();
 
     sigma = (to - from) / 8 < 1 ? 1 : (to - from) / 8;
 
@@ -217,7 +216,6 @@ Background::Background(uint16_t pin, long rise, long set, uint16_t to, uint16_t 
     strip = new Adafruit_NeoPixel(to, pin, DATA_TRANSMISSION);
     strip->begin();
     strip->setBrightness(brightness);
-    strip->show();
 
     sigma = (to - from) / 8 < 1 ? 1 : (to - from) / 8;
 

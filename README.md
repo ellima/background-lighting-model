@@ -2,11 +2,11 @@
 
 This C++ library uses the [Adafruit_NeoPixel library](https://github.com/adafruit/Adafruit_NeoPixel) to provide an easy-to-use method for background lighting installations of WS2812b-LEDs, controlled by a microcontroller like an ESP32, ESP8266 or Arduino. A use case might be an LED strip around a model-railway or something similar that needs a daylight spectrum cycle backround lighting.
 
-It mimics the light of the sky from a bright blue around noon to dark blue around midnight during a course of a day. The time period can be set arbitrarily. Twilight in the morning and eveining are also built in.
+It mimics the light of the sky from a bright blue around noon to dark blue around midnight during a course of the day. The time period can be chosen arbitrarily. Twilight in the morning and eveining are also built in.
 
 ## Prerequisites
 
-This project was tested with an ESP8266 and the Arduino Uno board so far and should also run on an ESP32. **NOTE: The Arduino Uno only has 2kB in RAM. Each Pixel on the strip takes up ~18 Byte so be careful controlling large numbers of LEDs with the UNO.**
+This project was tested with an ESP8266 and the Arduino Uno board so far and should also run on an ESP32. **The Arduino Uno only has 2 kB in RAM. Each additional pixel on the strip takes up ~18 byte so be careful controlling large numbers of LEDs with the UNO.**
 
 Using an ESP board is recommended.
 

@@ -34,7 +34,7 @@ class Background{
     const Fix_Color morning_red = {0xFF, 0x58, 0x0};
     const Fix_Color noon = {0xFF, 0xFF, 0xFF};
 
-    Adafruit_NeoPixel * strip = nullptr;
+    Adafruit_NeoPixel *strip = nullptr;
 
     float periodic = 0;
     int periodic_time = 0;
@@ -43,14 +43,14 @@ class Background{
 
     uint8_t sigma = 1;
 
-    uint8_t * red_state = nullptr;
-    uint8_t * green_state = nullptr;
-    uint8_t * blue_state = nullptr;
+    uint8_t *red_state = nullptr;
+    uint8_t *green_state = nullptr;
+    uint8_t *blue_state = nullptr;
 
     unsigned long t_ref = 0;
-    unsigned long * t_ref_red = nullptr;
-    unsigned long * t_ref_green = nullptr;
-    unsigned long * t_ref_blue = nullptr;
+    unsigned long *t_ref_red = nullptr;
+    unsigned long *t_ref_green = nullptr;
+    unsigned long *t_ref_blue = nullptr;
 
     long ref_time = 0;
 
@@ -59,7 +59,7 @@ class Background{
     long sunset = 0;
 
     #ifndef ESP_H
-    long time(long * t){
+    long time(long *t){
         *t = (millis()) / 1000; return *t;
     }
     #endif
