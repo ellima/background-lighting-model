@@ -20,8 +20,11 @@ class Background{
   private:
     const uint16_t background_index = 0;
     const uint16_t next_index = 0;
+    uint16_t led_count = 0;
 
     const bool new_used = false;
+    const bool opposite = true;
+    const bool fixed_minutes = true;
 
     struct Fix_Color{
         uint8_t red;
@@ -38,8 +41,9 @@ class Background{
 
     float periodic = 0;
     int periodic_time = 0;
+    float day_offset = 0;
 
-    int init_phase = 0;
+    long init_phase = 0;
 
     uint8_t sigma = 1;
 
@@ -59,14 +63,27 @@ class Background{
     long sunset = 0;
 
     #ifndef ESP_H
-    long time(long *t){
-        *t = (millis()) / 1000; return *t;
+    long time(long *t)
+    {
+        *t = millis() / 1000 + 60; return *t;
     }
     #endif
 
     inline const float gauss(int i, float m)
     {
         return exp(-0.5 * pow( ( ((float)i - m) / sigma ), 2.));
+    }
+
+    inline float day_sine(long now)
+    {
+        if (fixed_minutes)
+        {
+            return sin(periodic * (now - init_phase));
+        }
+        else 
+        {
+            return cos(periodic * (now - init_phase)) - day_offset;
+        }
     }
 
     inline const float fmap(float val, float in_min, float in_max, float out_min, float out_max)
@@ -81,6 +98,8 @@ class Background{
     uint8_t eclipse(int index, uint8_t colour, uint8_t morning, uint8_t noon, long time);
 
     void time_management();
+    inline float min(){ return -1 - day_offset; };
+    inline float max(){ return 1 - day_offset; };
 
   public:
     long const getCurrentTime(){ return current_time; };
@@ -90,10 +109,10 @@ class Background{
 
     void background_sky();
 
-    Background(uint16_t pin, uint16_t to = DEFAULT_LED_COUNT, int minutes = DEFAULT_MINUTES, uint16_t from = 0, uint8_t brightness = 255);
-    Background(uint16_t pin, long rise, long set, uint16_t to = DEFAULT_LED_COUNT, uint16_t from = 0, uint8_t brightness = 255);
-    Background(Adafruit_NeoPixel &neo, int minutes = DEFAULT_MINUTES, uint16_t from = 0, uint16_t to = 0);
-    Background(Adafruit_NeoPixel &neo, long rise, long set, uint16_t from = 0, uint16_t to = 0);
+    Background(uint16_t pin, bool opp_startpoint, uint16_t to = DEFAULT_LED_COUNT, int minutes = DEFAULT_MINUTES, uint16_t from = 0, uint8_t brightness = 255);
+    Background(uint16_t pin, bool opp_startpoint, long rise, long set, uint16_t to = DEFAULT_LED_COUNT, uint16_t from = 0, uint8_t brightness = 255);
+    Background(Adafruit_NeoPixel &neo, bool opp_startpoint, int minutes = DEFAULT_MINUTES, uint16_t from = 0, uint16_t to = 0);
+    Background(Adafruit_NeoPixel &neo, bool opp_startpoint, long rise, long set, uint16_t from = 0, uint16_t to = 0);
     ~Background();
 };
 
