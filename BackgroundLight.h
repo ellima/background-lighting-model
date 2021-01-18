@@ -15,6 +15,7 @@
 #define DEFAULT_LED_COUNT 8
 
 
+// Background class in order to work with objects of it
 class Background{
 
   private:
@@ -26,6 +27,7 @@ class Background{
     const bool opposite = true;
     const bool fixed_minutes = true;
 
+    // custom struct to store RGB colours
     struct Fix_Color{
         uint8_t red;
         uint8_t green;
@@ -62,6 +64,8 @@ class Background{
     long sunrise = 0;
     long sunset = 0;
 
+    // time() method not defined for e.g. default Arduino's libraries but in ESP libraries
+    // define time() if no ESP is used
     #ifndef ESP_H
     long time(long *t)
     {
@@ -69,6 +73,7 @@ class Background{
     }
     #endif
 
+    // inline fucntions for short calculations
     inline const float gauss(int i, float m)
     {
         return exp(-0.5 * pow( ( ((float)i - m) / sigma ), 2.));
@@ -91,6 +96,9 @@ class Background{
         return (val - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
 
+    inline float min(){ return -1 - day_offset; };
+    inline float max(){ return 1 - day_offset; };
+
     float intensity_factor(int i);
     float intensity_factor(int i, long time);
 
@@ -98,10 +106,9 @@ class Background{
     uint8_t eclipse(int index, uint8_t colour, uint8_t morning, uint8_t noon, long time);
 
     void time_management();
-    inline float min(){ return -1 - day_offset; };
-    inline float max(){ return 1 - day_offset; };
 
   public:
+    // define functions to access private properties
     long const getCurrentTime(){ return current_time; };
     long const getSunrise(){ return sunrise; };
     long const getSunset(){ return sunset; };
@@ -109,6 +116,7 @@ class Background{
 
     void background_sky();
 
+    // constructors/destructors
     Background(uint16_t pin, bool opp_startpoint, uint16_t to = DEFAULT_LED_COUNT, int minutes = DEFAULT_MINUTES, uint16_t from = 0, uint8_t brightness = 255);
     Background(uint16_t pin, bool opp_startpoint, long rise, long set, uint16_t to = DEFAULT_LED_COUNT, uint16_t from = 0, uint8_t brightness = 255);
     Background(Adafruit_NeoPixel &neo, bool opp_startpoint, int minutes = DEFAULT_MINUTES, uint16_t from = 0, uint16_t to = 0);
